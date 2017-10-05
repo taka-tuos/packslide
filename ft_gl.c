@@ -118,6 +118,8 @@ int ftgl_strlen(ftgl_fhndl *obj, char *sz)
 
 void ftgl_dstr(ftgl_fhndl *obj, ftgl_surf *sdl_screen, int x, int y, char *sz, int c)
 {
+	return;
+	
 	int ps = 0;
 	int pc = 0;
 

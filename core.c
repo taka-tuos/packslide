@@ -2,7 +2,13 @@
 #include "libpuyo.h"
 #include "orzpcm.h"
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
+
 #define PGP 12.5f
+
+#define GLUpdate glFlush
 
 #define dprogress() \
 	ximage_bitblt(__disp,__img,0,0); \
@@ -11,7 +17,31 @@
 	 \
 	ximage_boxfill(__disp,320-128-2,240-8,320-128+(pg / 100.0f * 256.0f),240+8,0x802000); \
 	 \
-	SDL_UpdateRect(sdl_screen,0,0,0,0); \
+	/*SDL_UpdateRect(sdl_screen,0,0,0,0);*/ \
+	GLUpdate(); \
+
+void gfxSetView2D(int width, int height)
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, width, height, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void gfxInitialize(int width, int height)
+{
+	gfxSetView2D(width, height);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void sysQuitProgram(int code)
+{
+	SDL_Quit();
+
+	exit(code);
+}
 
 int main(int argc, char *argv[])
 {
@@ -19,12 +49,53 @@ int main(int argc, char *argv[])
 	SDL_Surface *sdl_screen;
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO);
+	
+	const SDL_VideoInfo* info = NULL;
+	int width = 0;
+	int height = 0;
+	int bpp = 0;
+	int flags = 0;
 
-	sdl_screen = SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE/* | SDL_FULLSCREEN*/);
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		/* Failed, exit. */
+		fprintf(stderr, "Video initialization failed: %s\n",
+			 SDL_GetError());
+		sysQuitProgram(1);
+	}
+
+	info = SDL_GetVideoInfo();
+
+	if(!info) {
+		fprintf(stderr, "Video query failed: %s\n",
+			 SDL_GetError());
+		sysQuitProgram(1);
+	}
+
+	width = 640;
+	height = 480;
+	bpp = info->vfmt->BitsPerPixel;
+
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
+
+	flags = SDL_OPENGL /*| SDL_FULLSCREEN*/;
+
+	if(SDL_SetVideoMode(width, height, bpp, flags) == 0) {
+		fprintf(stderr, "Video mode set failed: %s\n",
+			 SDL_GetError());
+		sysQuitProgram(1);
+	}
+
+	gfxInitialize(width, height);
+
+	sdl_screen = SDL_GetVideoSurface();//SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE/* | SDL_FULLSCREEN*/);
 
 	SDL_ShowCursor(0);
 
-	ximage *__disp = ximage_create(640, 480, sdl_screen->pitch >> 2, sdl_screen->pixels);
+	ximage *__disp = NULL;//ximage_create(640, 480, sdl_screen->pitch >> 2, sdl_screen->pixels);
 
 	float pg = 0;
 
@@ -114,6 +185,8 @@ __reset:
 
 	while (1) {
 		fps_adjust();
+		
+		glColor4f(1, 1, 1, 1.0);
 
 		Uint8 *key = SDL_GetKeyState(NULL);
 
@@ -137,7 +210,8 @@ __reset:
 
 		ximage_textout(sft, __disp, 2, 2, 0xffffff, fpss, 0);
 
-		SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		GLUpdate();
 
 		poll_event(&sdl_event);
 
@@ -188,7 +262,8 @@ __tnt:
 
 		ximage_textoutf(tft, __disp, 320, 240, 0xffffff, 1, "%d", n);
 
-		SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		GLUpdate();
 
 		poll_event(&sdl_event);
 	}
@@ -368,7 +443,8 @@ __tnt:
 				ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2 - 16, 0xffffff, "Ç‚ÇËÇ»Ç®Çµ : I", 1);
 				ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "ÉQÅ[ÉÄÇÇ‚ÇﬂÇÈ : Q", 1);
 
-				SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+				//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+				GLUpdate();
 
 				while (1) {
 					fps_adjust();
@@ -405,7 +481,8 @@ __tnt:
 
 			ximage_textout(tft, __disp, 320, 240, 0xffffff, "TIME UP", 1);
 
-			SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+			//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+			GLUpdate();
 
 			for (i = 0; i < 60; i++) {
 				fps_adjust();
@@ -424,7 +501,8 @@ __tnt:
 			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 16 - 8, 0xffffff, "ÉQÅ[ÉÄÇë±ÇØÇÈ : C", 1);
 			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "ÉQÅ[ÉÄÇÇ‚ÇﬂÇÈ : Q", 1);
 
-			SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+			//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+			GLUpdate();
 
 			while (1) {
 				fps_adjust();
@@ -458,7 +536,8 @@ __tnt:
 			kf[4] = 1;
 		}
 
-		SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		GLUpdate();
 
 		poll_event(&sdl_event);
 

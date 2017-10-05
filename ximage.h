@@ -9,7 +9,7 @@ typedef struct {
 	int w,h,p;
 } ximage;
 
-typedef void ximage_fhndl;
+typedef int ximage_fhndl;
 
 void ximage_init(void);
 ximage *ximage_create(int w, int h, int p, void *pixels);
