@@ -2,13 +2,20 @@
 #include "libpuyo.h"
 #include "orzpcm.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+//#include <GL/gl.h>
+//#include <GL/glu.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 #define PGP 12.5f
 
-#define GLUpdate glFlush
+ximage *__disp;
+extern GLuint xfbo;
+
+void GLUpdate(void)
+{
+	glFlush();
+}
 
 #define dprogress() \
 	ximage_bitblt(__disp,__img,0,0); \
@@ -88,20 +95,24 @@ int main(int argc, char *argv[])
 			 SDL_GetError());
 		sysQuitProgram(1);
 	}
+	
+	glewInit();
 
 	gfxInitialize(width, height);
+	
+	ximage_init(width, height);
 
-	sdl_screen = SDL_GetVideoSurface();//SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE/* | SDL_FULLSCREEN*/);
+	sdl_screen = SDL_GetVideoSurface();
 
 	SDL_ShowCursor(0);
 
-	ximage *__disp = NULL;//ximage_create(640, 480, sdl_screen->pitch >> 2, sdl_screen->pixels);
-
+	__disp = ximage_fbo(width, height);
+	
+	//ximage_fboenable(__disp);
+	
 	float pg = 0;
 
 	ximage *__img = ximage_load("resource/back.png");
-
-	//ximage *__img2 = ximage_load("resource/splash.png");
 
 	pg += PGP;
 	dprogress();
@@ -113,10 +124,6 @@ int main(int argc, char *argv[])
 	_orzpcm_init();
 
 	_orzpcm_chunk ogg[5];
-
-	//ximage_bitblt(__disp,__img2,0,0);
-
-	//SDL_UpdateRect(sdl_screen,0,0,0,0);
 
 	ogg[0] = _orzpcm_loadfile("resource/game_maoudamashii_1_battle15.wav");
 	pg += PGP;
@@ -138,14 +145,12 @@ int main(int argc, char *argv[])
 	pg += PGP;
 	dprogress();
 
-	ximage_init();
-
-	ximage_fhndl *tft = ximage_initft("resource/splafont.ttf");
-	ximage_textsize(tft, 64);
+	ximage_fhndl *tft = ximage_initft();
+	ximage_textsize(tft, 36);
 	pg += PGP;
 	dprogress();
 
-	ximage_fhndl *sft = ximage_initft("resource/ipa-mona/ipag-mona.ttf");
+	ximage_fhndl *sft = ximage_initft();
 	ximage_textsize(sft, 12);
 	pg += PGP;
 	dprogress();
@@ -170,11 +175,11 @@ int main(int argc, char *argv[])
 		__chip[i] = ximage_load(f);
 	}
 
-	ximage_fhndl *cft = ximage_initft("resource/ipa-mona/ipag-mona.ttf");
+	ximage_fhndl *cft = ximage_initft();
 	ximage_textsize(cft, 12);
 
-	ximage_fhndl *nft = ximage_initft("resource/ipa-mona/ipag-mona.ttf");
-	ximage_textsize(nft, 20);
+	ximage_fhndl *nft = ximage_initft();
+	ximage_textsize(nft, 24);
 
 	char fpss[16];
 	fpss[0] = 0;
@@ -199,8 +204,8 @@ __reset:
 
 		ximage_textoutf(nft, __disp, 320, 480 - 32 - 64, (fps % 10 < 5) ? (0xffffff) : (0x0000ff), 1, "high %08d", hgn);
 
-		ximage_textout(sft, __disp, 320, 480 - 32, 0xffffff, "(c)2016 TSH-TECH HIGISCHOOL D-KEN", 1);
-		ximage_textout(sft, __disp, 320, 480 - 32 - 16, 0xffffff, "Powered by SDL and freetype", 1);
+		ximage_textout(sft, __disp, 320, 480 - 32, 0xffffff, "made by kagura1050 2017", 1);
+		ximage_textout(sft, __disp, 320, 480 - 32 - 16, 0xffffff, "Powered by SDL/OpenGL and freetype", 1);
 
 		if (SDL_GetTicks() - ftim >= 1000) {
 			sprintf(fpss, "%d fps", fps);
@@ -210,7 +215,6 @@ __reset:
 
 		ximage_textout(sft, __disp, 2, 2, 0xffffff, fpss, 0);
 
-		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 		GLUpdate();
 
 		poll_event(&sdl_event);
@@ -261,8 +265,7 @@ __tnt:
 		int n = 3 - i / 30;
 
 		ximage_textoutf(tft, __disp, 320, 240, 0xffffff, 1, "%d", n);
-
-		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+		
 		GLUpdate();
 
 		poll_event(&sdl_event);
@@ -410,8 +413,8 @@ __tnt:
 		if (ltime < 1800 + 30 && ltime > 1800 - 90) nc = 0x00ffff;
 		if (ltime < 900 + 30 && ltime > 900 - 90) if (ltime < 900) nc = 0x0000ff;
 
-		if (ltime < 1800 + 30 && ltime > 1800 - 90) strcpy(tts, "Žc‚è 1•ª");
-		if (ltime < 900 + 30 && ltime > 900 - 90) strcpy(tts, "Žc‚è 30•b");
+		if (ltime < 1800 + 30 && ltime > 1800 - 90) strcpy(tts, "1 MINUTES TO GO");
+		if (ltime < 900 + 30 && ltime > 900 - 90) strcpy(tts, "30 SECONDS TO GO");
 
 		if (ltime == 1800 + 30) _orzpcm_play(ogg[2], 0);
 		if (ltime == 900 + 30) _orzpcm_play(ogg[2], 0);
@@ -425,52 +428,7 @@ __tnt:
 			ximage_textoutf(sft, __disp, 320, 20, nc2, 1, "%s", tts);
 		}
 
-		ximage_textoutf(nft, __disp, 640 - 135, 2, nc, 0, "%02d:%02d.%02d", m, s, t);
-
-		if (key[SDLK_m] && key[SDLK_LCTRL]) {
-			_orzpcm_stop(tti);
-
-			if (kf[5] == 0) {
-				for (i = -2; i < 3; i++) {
-					for (j = -2; j < 3; j++) {
-						ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 16 - 8 - 16 + i, 0x000000, "ƒQ[ƒ€‚ð‘±‚¯‚é : C", 1);
-						ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 - 16 + i, 0x000000, "‚â‚è‚È‚¨‚µ : I", 1);
-						ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 + i, 0x000000, "ƒQ[ƒ€‚ð‚â‚ß‚é : Q", 1);
-					}
-				}
-
-				ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 16 - 8 - 16, 0xffffff, "ƒQ[ƒ€‚ð‘±‚¯‚é : C", 1);
-				ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2 - 16, 0xffffff, "‚â‚è‚È‚¨‚µ : I", 1);
-				ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "ƒQ[ƒ€‚ð‚â‚ß‚é : Q", 1);
-
-				//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-				GLUpdate();
-
-				while (1) {
-					fps_adjust();
-
-					Uint8 *key = SDL_GetKeyState(NULL);
-
-					poll_event(&sdl_event);
-
-					if (key[SDLK_c]) break;
-					if (key[SDLK_i]) {
-						_orzpcm_stop(tti);
-						goto __tnt;
-					}
-					if (key[SDLK_q])  {
-						goto __reset;
-						return 0;
-					}
-				}
-
-				kf[5] = 1;
-			}
-			_orzpcm_resume(tti);
-		}
-		else {
-			kf[5] = 0;
-		}
+		ximage_textoutf(nft, __disp, 640, 2, nc, 2, "%02d:%02d.%02d", m, s, t);
 
 		if (ltime == 0) {
 			int i;
@@ -480,8 +438,7 @@ __tnt:
 			_orzpcm_play(ogg[4], 0);
 
 			ximage_textout(tft, __disp, 320, 240, 0xffffff, "TIME UP", 1);
-
-			//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+			
 			GLUpdate();
 
 			for (i = 0; i < 60; i++) {
@@ -492,30 +449,20 @@ __tnt:
 
 			for (i = -2; i < 3; i++) {
 				for (j = -2; j < 3; j++) {
-					ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 16 - 8 + i, 0x000000, "ƒQ[ƒ€‚ð‘±‚¯‚é : C", 1);
-					ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 + i, 0x000000, "ƒQ[ƒ€‚ð‚â‚ß‚é : Q", 1);
+					ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 + i, 0x000000, "PRESS START TO RETURN TITLE", 1);
 				}
 			}
 
+			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "PRESS START TO RETURN TITLE", 1);
 
-			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 16 - 8, 0xffffff, "ƒQ[ƒ€‚ð‘±‚¯‚é : C", 1);
-			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "ƒQ[ƒ€‚ð‚â‚ß‚é : Q", 1);
-
-			//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 			GLUpdate();
 
 			while (1) {
 				fps_adjust();
 
 				poll_event(&sdl_event);
-
-				if (key[SDLK_c]) {
-					goto __tnt;
-				}
-				if (key[SDLK_q]) {
-					goto __reset;
-					return 0;
-				}
+				
+				if (key[SDLK_q]) goto __reset;
 			}
 
 			ltime = 2700;
@@ -536,7 +483,6 @@ __tnt:
 			kf[4] = 1;
 		}
 
-		//SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 		GLUpdate();
 
 		poll_event(&sdl_event);

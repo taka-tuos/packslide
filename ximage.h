@@ -6,16 +6,19 @@
 
 typedef struct {
 	unsigned int *pixels;
-	int w,h,p;
+	int w,h,p,f;
 } ximage;
 
 typedef int ximage_fhndl;
 
-void ximage_init(void);
+void ximage_init(int w, int h);
+ximage *ximage_fbo(int w, int h);
+ximage *ximage_update(ximage *fbo);
+void ximage_fboenable(ximage *fbo);
 ximage *ximage_create(int w, int h, int p, void *pixels);
 ximage *ximage_load(char *f);
 void ximage_bitblt(ximage *dst, ximage *src, int x, int y);
-ximage_fhndl *ximage_initft(char *ttf);
+ximage_fhndl *ximage_initft(void);
 void ximage_textout(ximage_fhndl *hndl, ximage *dst, int x, int y, int c, char *sz, int mode);
 void ximage_textoutf(ximage_fhndl *hndl, ximage *dst, int x, int y, int c, int mode, char *fmt, ...);
 void ximage_textsize(ximage_fhndl *hndl, int size);
