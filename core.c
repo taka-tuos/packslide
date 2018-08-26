@@ -204,8 +204,8 @@ __reset:
 
 		ximage_textoutf(nft, __disp, 320, 480 - 32 - 64, (fps % 10 < 5) ? (0xffffff) : (0x0000ff), 1, "high %08d", hgn);
 
-		ximage_textout(sft, __disp, 320, 480 - 32, 0xffffff, "made by kagura1050 2017", 1);
-		ximage_textout(sft, __disp, 320, 480 - 32 - 16, 0xffffff, "Powered by SDL/OpenGL and freetype", 1);
+		ximage_textout(sft, __disp, 320, 480 - 32, 0xffffff, "made by kagura1050 2018", 1);
+		ximage_textout(sft, __disp, 320, 480 - 32 - 16, 0xffffff, "Powered by SDL/OpenGL", 1);
 
 		if (SDL_GetTicks() - ftim >= 1000) {
 			sprintf(fpss, "%d fps", fps);
