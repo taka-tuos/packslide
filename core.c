@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
 
-	flags = SDL_OPENGL /*| SDL_FULLSCREEN*/;
+	flags = SDL_OPENGL | SDL_FULLSCREEN;
 
 	if(SDL_SetVideoMode(width, height, bpp, flags) == 0) {
 		fprintf(stderr, "Video mode set failed: %s\n",
@@ -449,11 +449,11 @@ __tnt:
 
 			for (i = -2; i < 3; i++) {
 				for (j = -2; j < 3; j++) {
-					ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 + i, 0x000000, "PRESS START TO RETURN TITLE", 1);
+					ximage_textout(sft, __disp, 320 + j, 480 - 32 - 16 - 8 + 2 + i, 0x000000, "HIT Q TO RETURN TITLE", 1);
 				}
 			}
 
-			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "PRESS START TO RETURN TITLE", 1);
+			ximage_textout(sft, __disp, 320, 480 - 32 - 16 - 8 + 2, 0xffffff, "HIT Q TO RETURN TITLE", 1);
 
 			GLUpdate();
 
